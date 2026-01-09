@@ -1,6 +1,9 @@
+#include <cstddef>
 #include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #include <iostream>
+#include <stdio.h>
 
 /* para cositas de la terminal */
 #ifdef WIN32
@@ -76,6 +79,12 @@ char gchar();
  * @return un puntero al texto recibido (se le tiene que hacer
  * free despues). o null si no se ingreso nada. */
 char* gettext(bool password = 0);
+
+/*
+ * @details Espera al que el usuario ingrese un entero
+ * @return el entero del usuario o 0 si no fue valido
+ */
+int getint();
 
 /**
  * @details Esta es la funcion que hace el login,
@@ -198,4 +207,10 @@ char* gettext(bool password) {
     memcpy(nuevostr, buffer, caracteresIngresados+1);
 
     return nuevostr;
+}
+
+int getint() {
+    char buffer[64];
+    fgets(buffer, 64, stdin);
+    return strtol(buffer, NULL, 10);
 }
