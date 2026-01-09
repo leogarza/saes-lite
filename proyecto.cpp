@@ -15,7 +15,7 @@
 #include <termios.h>
 #include <unistd.h>
 #define dormir(ms) usleep(ms*1000)
-#define limpiar system("clear")
+#define limpiar() system("clear")
 #endif
 
 using namespace std;
@@ -82,8 +82,7 @@ char* gettext(bool password = 0);
 
 /*
  * @details Espera al que el usuario ingrese un entero
- * @return el entero del usuario o 0 si no fue valido
- */
+ * @return el entero del usuario o 0 si no fue valido */
 int getint();
 
 /**
@@ -96,10 +95,11 @@ bool login() {
     char* user;
     char* password;
 
+    limpiar();
     cout << "===========================================" << endl;
     cout << "   Sistema Administrativo Escolar (LITE)" << endl;
     cout << "===========================================" << endl;
-    cout << "| Datos de admin | Usuario: " << ADMINUSER << " Clave: " << ADMINPASS << endl;
+    cout << "| Datos de admin | Usuario: " << ADMINUSER << " --- Clave: " << ADMINPASS << endl;
     cout << "Ingrese usuario: " << endl;
     user = gettext();
     cout << "Ingrese clave: " << endl;
@@ -121,19 +121,62 @@ bool login() {
 }
 
 void adminMenu() {
-    cout << "Bienvenido " << ADMINUSER << "!" << endl;
-    cout << "[1] Gestion de Materias" << endl;
-    cout << "[2] Gestion de Grupos" << endl;
-    cout << "[3] Gestion de Alumnos" << endl;
-    cout << "[4] Gestion de Profesores" << endl;
-    cout << "[5] Inscripciones" << endl;
-    cout << "[6] Reportes Generales" << endl;
-    cout << "[7] Salir" << endl;
+    while(1) {
+        limpiar();
+        cout << "Bienvenido " << ADMINUSER << "!" << endl;
+        cout << "[1] Gestion de Materias" << endl;
+        cout << "[2] Gestion de Grupos" << endl;
+        cout << "[3] Gestion de Alumnos" << endl;
+        cout << "[4] Gestion de Profesores" << endl;
+        cout << "[5] Inscripciones" << endl;
+        cout << "[6] Reportes Generales" << endl;
+        cout << "[7] Salir" << endl;
+
+        cout << "Introduce el numero de la opcion: " << endl;
+        cout << "> ";
+        int opcion = getint();
+
+        switch(opcion) {
+            case 1:
+                cout << "Opcion 1" << endl;
+                break;
+            case 2:
+                cout << "Opcion 2" << endl;
+                break;
+            case 3:
+                cout << "Opcion 3" << endl;
+                break;
+            case 4:
+                cout << "Opcion 4" << endl;
+                break;
+            case 5:
+                cout << "Opcion 5" << endl;
+                break;
+            case 6:
+                cout << "Opcion 6" << endl;
+                break;
+            case 7:
+                cout << "Saliendo!" << endl;
+                dormir(800);
+                return;
+            default:
+                cout << "Opcion invalida!" << endl;
+        }
+        dormir(800);
+    }
 }
 
 int main() {
+    while(1) {
     login();
+    if(adminMode) {
+        adminMenu();
+        continue;
+    }
 
+    /* menu del usuario */
+    /* ... */
+    }
     return 0;
 }
 
@@ -142,15 +185,14 @@ char gchar() {
     return _getch();
     #else
     /* para los que usan linux o mac o lo que sea */
-    struct termios attr;
-    tcgetattr(0, &attr);
+    struct termios attr, old;
+    tcgetattr(0, &old);
+    attr = old;
     attr.c_lflag &= ~ECHO;
     attr.c_lflag &= ~ICANON;
     tcsetattr(0, TCSANOW, &attr);
     char c = getchar();
-    attr.c_lflag |= ECHO;
-    attr.c_lflag |= ICANON;
-    tcsetattr(0, TCSANOW, &attr);
+    tcsetattr(0, TCSANOW, &old);
     return c;
     #endif
 }
