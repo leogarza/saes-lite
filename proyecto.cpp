@@ -115,6 +115,12 @@ char* gettext(bool password = 0);
  * @return el entero del usuario o 0 si no fue valido */
 int getint();
 
+/*
+ * @details hace que el usuario tenga que presionar enter
+ * para continuar.
+ */
+void pausar();
+
 /**
  * @details Esta es la funcion que hace el login,
  * de momento es un simple login sin hashing ni nada.
@@ -285,4 +291,12 @@ int getint() {
     char buffer[64];
     fgets(buffer, 64, stdin);
     return strtol(buffer, NULL, 10);
+}
+
+void pausar() {
+    cout << "Presiona enter para continuar...";
+    fflush(stdout);
+    while(gchar() != '\n') {
+        dormir(10);
+    }
 }
