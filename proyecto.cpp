@@ -111,7 +111,16 @@ bool login() {
     return true;
 }
 
-
+void adminMenu() {
+    cout << "Bienvenido " << ADMINUSER << "!" << endl;
+    cout << "[1] Gestion de Materias" << endl;
+    cout << "[2] Gestion de Grupos" << endl;
+    cout << "[3] Gestion de Alumnos" << endl;
+    cout << "[4] Gestion de Profesores" << endl;
+    cout << "[5] Inscripciones" << endl;
+    cout << "[6] Reportes Generales" << endl;
+    cout << "[7] Salir" << endl;
+}
 
 int main() {
     login();
