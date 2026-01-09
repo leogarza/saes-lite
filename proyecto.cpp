@@ -61,9 +61,9 @@ struct Alumno {
 };
 
 struct Escuela {
-    struct Alumno* alumnos;
-    struct Profesor* profesores;
-    struct Materia* materias;
+    struct Alumno* alumnos = NULL;
+    struct Profesor* profesores = NULL;
+    struct Materia* materias = NULL;
 };
 
 /* utilidad para controlar el flujo de caracteres
