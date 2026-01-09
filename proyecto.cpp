@@ -40,7 +40,9 @@ struct BloqueHorario {
     enum { LUN, MAR, MIE, JUE, VIE, SAB } dia;
     unsigned short int hora;
     unsigned short int minuto;
+    char edificio;
     unsigned short int salon;
+    char duracionMin;
     struct BloqueHorario* sig;
 };
 
@@ -50,23 +52,52 @@ struct HorarioMateria {
 };
 
 struct Profesor {
+    unsigned int uid;
     char nombre[64];
     struct Profesor* sig;
+};
+
+enum CALIFICACION {
+    PRIMERPAR = 0,
+    SEGUNDOPAR,
+    TERCERPAR,
+    FINAL,
+    CALFIFACIONTAM
+};
+
+struct Inscripcion {
+    unsigned int idGrupo;
+    float calificaciones[CALFIFACIONTAM];
+    struct Inscripcion* sig;
 };
 
 struct Alumno {
     char nombre[64];
     unsigned int boleta;
     unsigned short int periodo;
+    Inscripcion* materiasInscritas;
 
     struct Alumno* sig;
 };
 
-struct Escuela {
+struct Grupo {
+    unsigned int uid;
+    unsigned int uidMateria;
+    unsigned int uidProfesor;
+    char clave[5]; /* ej 2CV1 */
+    struct BloqueHorario* horario;
+    unsigned short int cupoMax;
+    unsigned short int inscritos;
+
+    struct Grupo* sig;
+};
+
+struct {
     struct Alumno* alumnos = NULL;
     struct Profesor* profesores = NULL;
     struct Materia* materias = NULL;
-};
+    struct Grupo* grupos = NULL;
+} Escuela;
 
 /* utilidad para controlar el flujo de caracteres
  * manualmente. (comportandose como getch de windows) */
