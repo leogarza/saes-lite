@@ -7,10 +7,12 @@
 #include <windows.h>
 #include <conio.h>
 #define dormir(ms) Sleep(ms)
-#else
+#define limpiar() system("cls")
+#else /* UNIX */
 #include <termios.h>
 #include <unistd.h>
 #define dormir(ms) usleep(ms*1000)
+#define limpiar system("clear")
 #endif
 
 using namespace std;
@@ -98,7 +100,6 @@ bool login() {
         if (strcmp(password, ADMINPASS) == 0) {
             cout << "CHEAT CODE: MODO ADMIN ACTIVADO" << endl;
             adminMode = true;
-
         }
     }
 
@@ -110,9 +111,10 @@ bool login() {
     return true;
 }
 
+
+
 int main() {
     login();
-
 
     return 0;
 }
