@@ -144,6 +144,43 @@ void insertarNodo(void** cabeza, void* nuevo) {
     }
 }
 
+/*
+ * @details funcion para borrar un nodo dado el puntero a su anterior
+ * @param[in, out] cabeza el puntero al primer elemento de la lista
+ * @param[in] anterior el puntero al nodo previo al que se quiere eliminar (NULL para eliminar la cabeza)
+ */
+void borrarSiguienteNodo(void** cabeza, void* anterior) {
+    NodoGenerico** head = (NodoGenerico**)cabeza;
+    NodoGenerico* prev = (NodoGenerico*)anterior;
+
+    /* si 'anterior' es NULL, borramos el primer nodo (cabeza) */
+    if(prev == NULL) {
+        assert(*head && "la lista esta vacia, no se puede borrar la cabeza!");
+        if(*head == NULL) return;
+
+        NodoGenerico* temp = *head;
+        /* movemos la cabeza al siguiente nodo */
+        *head = temp->sig;
+
+        /* liberamos la memoria del nodo eliminado */
+        free(temp);
+    }
+    /* caso 2: Borrado de un nodo interno o final */
+    else {
+        /* verificamos que exista algo que borrar despues de 'anterior' */
+        assert(prev->sig && "No existe un nodo siguiente para borrar!");
+        if(prev->sig == NULL) return;
+
+        NodoGenerico* aBorrar = prev->sig;
+
+        /* saltamos el nodo a borrar: anterior apunta al siguiente del borrado */
+        prev->sig = aBorrar->sig;
+
+        /* liberamos la memoria del nodo eliminado :) */
+        free(aBorrar);
+    }
+}
+
 /* -- funciones utilidades -- */
 
 /* utilidad para controlar el flujo de caracteres
