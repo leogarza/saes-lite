@@ -265,6 +265,7 @@ void agregarMateria() {
     materia->periodo = periodo;
     materia->creditos = creditos;
     materia->uid = uid;
+    materia->sig = NULL;
     insertarNodo((void**)&Escuela.materias, materia);
     cout << "Agregada materia!" << endl;
     dormir(800);
