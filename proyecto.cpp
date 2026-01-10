@@ -244,7 +244,12 @@ void gestionMaterias() {
         dormir(1000);
         agregarMateria();
     }
-
+    cout << "Materias disponibles: " << endl;
+    Materia *act = Escuela.materias;
+    while(act->sig != NULL) {
+        cout << "\t" << act->codigo << ": " << act->nombre << endl;
+        act = act->sig;
+    }
 }
 
 void adminMenu() {
