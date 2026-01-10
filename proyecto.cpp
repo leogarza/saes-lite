@@ -261,6 +261,10 @@ void agregarMateria() {
     float creditos = getfloat();
     unsigned uid = contador++;
     Materia* materia  = (Materia*)malloc(sizeof(Materia));
+    if(!materia) {
+        cout << "No se pudo agregar materia" << endl;
+        return;
+    }
     materia->nombre = nombre;
     materia->codigo = codigo;
     materia->periodo = periodo;
@@ -305,7 +309,6 @@ void gestionMaterias() {
             Materia* actual = Escuela.materias;
             bool borrado = false;
             while(actual != NULL) {
-                if(actual) {
                     if(strcmp(actual->codigo, opcionmat) == 0) {
                         cout << "Borrando " << opcionmat << "!" << endl;
                         free(actual->codigo);
@@ -315,7 +318,6 @@ void gestionMaterias() {
                         borrado = true;
                         break;
                     }
-                }
                 anterior = actual;
                 actual = actual->sig;
             }
@@ -326,6 +328,7 @@ void gestionMaterias() {
             break;
         }
         case 3:
+            cout << "Saliendo" << endl;
             return;
         default:
             cout << "Opcion invalida!" << endl;
