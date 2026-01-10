@@ -1101,6 +1101,178 @@ void mostrarReportes() {
     }
 }
 
+/* -- SECCION DE MANTENIMIENTO Y ALGORITMOS -- */
+
+/*
+ * A continuacion implementamos MergeSort.
+ * Elegi este porque para listas ligadas es el rey (O(n log n)).
+ * El QuickSort se pone roñoso con listas simples y el Burbuja
+ * es para cuando tienes 3 datos locos, no para un sistema "serio" ;)
+ */
+
+/* helper para el merge sort: divide la lista en dos mitades
+ * usando el truco de la tortuga y la liebre */
+void partirListaAlumnos(Alumno* fuente, Alumno** frente, Alumno** atras) {
+    Alumno* rapido;
+    Alumno* lento;
+
+    if (fuente == NULL || fuente->sig == NULL) {
+        *frente = fuente;
+        *atras = NULL;
+    } else {
+        lento = fuente;
+        rapido = fuente->sig;
+
+        /* avanzamos 'rapido' dos veces y 'lento' una vez */
+        while (rapido != NULL) {
+            rapido = rapido->sig;
+            if (rapido != NULL) {
+                lento = lento->sig;
+                rapido = rapido->sig;
+            }
+        }
+
+        /* 'lento' esta antes del punto medio en la lista, asi que cortamos ahi */
+        *frente = fuente;
+        *atras = lento->sig;
+        lento->sig = NULL; /* cortamos el enlace */
+    }
+}
+
+/* helper para fusionar dos listas ordenadas de alumnos */
+Alumno* fusionarAlumnos(Alumno* a, Alumno* b) {
+    Alumno* resultado = NULL;
+
+    /* casos base de la recursion */
+    if (a == NULL) return b;
+    if (b == NULL) return a;
+
+    /* aqui comparamos por BOLETA para que quede ordenado
+     * de menor a mayor */
+    if (a->boleta <= b->boleta) {
+        resultado = a;
+        resultado->sig = fusionarAlumnos(a->sig, b);
+    } else {
+        resultado = b;
+        resultado->sig = fusionarAlumnos(a, b->sig);
+    }
+    return resultado;
+}
+
+/* funcion principal del ordenamiento recursivo */
+void mergeSortAlumnos(Alumno** cabezaRef) {
+    Alumno* cabeza = *cabezaRef;
+    Alumno* a = NULL;
+    Alumno* b = NULL;
+
+    /* si la lista esta vacia o solo tiene uno, ya esta ordenada (duh) */
+    if ((cabeza == NULL) || (cabeza->sig == NULL)) {
+        return;
+    }
+
+    /* partimos la lista en a y b */
+    partirListaAlumnos(cabeza, &a, &b);
+
+    /* ordenamos las sublistas recursivamente */
+    mergeSortAlumnos(&a);
+    mergeSortAlumnos(&b);
+
+    /* fusionamos las listas ya ordenadas */
+    *cabezaRef = fusionarAlumnos(a, b);
+}
+
+/* Lo mismo pero para Materias (por codigo) para que valga la pena
+ * el mantenimiento del sistema completo */
+void partirListaMaterias(Materia* fuente, Materia** frente, Materia** atras) {
+    Materia* rapido;
+    Materia* lento;
+    if (fuente == NULL || fuente->sig == NULL) {
+        *frente = fuente; *atras = NULL;
+    } else {
+        lento = fuente; rapido = fuente->sig;
+        while (rapido != NULL) {
+            rapido = rapido->sig;
+            if (rapido != NULL) {
+                lento = lento->sig; rapido = rapido->sig;
+            }
+        }
+        *frente = fuente; *atras = lento->sig; lento->sig = NULL;
+    }
+}
+
+Materia* fusionarMaterias(Materia* a, Materia* b) {
+    Materia* resultado = NULL;
+    if (a == NULL) return b;
+    if (b == NULL) return a;
+
+    /* comparacion de cadenas (alfabetica) */
+    if (strcmp(a->codigo, b->codigo) <= 0) {
+        resultado = a;
+        resultado->sig = fusionarMaterias(a->sig, b);
+    } else {
+        resultado = b;
+        resultado->sig = fusionarMaterias(a, b->sig);
+    }
+    return resultado;
+}
+
+void mergeSortMaterias(Materia** cabezaRef) {
+    Materia* cabeza = *cabezaRef;
+    Materia* a; Materia* b;
+    if ((cabeza == NULL) || (cabeza->sig == NULL)) return;
+    partirListaMaterias(cabeza, &a, &b);
+    mergeSortMaterias(&a);
+    mergeSortMaterias(&b);
+    *cabezaRef = fusionarMaterias(a, b);
+}
+
+void menuMantenimiento() {
+    limpiar();
+    cout << "============================================" << endl;
+    cout << "      MANTENIMIENTO DEL SISTEMA (ADMIN)     " << endl;
+    cout << "============================================" << endl;
+    cout << "ATENCION: Esta herramienta reorganiza la memoria." << endl;
+    cout << "Se utilizara el algoritmo MergeSort para ordenar" << endl;
+    cout << "las listas enlazadas principales." << endl << endl;
+
+    cout << "Condiciones de ordenamiento:" << endl;
+    cout << " - Alumnos: Ascendente por numero de BOLETA" << endl;
+    cout << " - Materias: Alfabetico por CODIGO" << endl;
+
+    cout << endl << "Desea ejecutar el ordenamiento ahora? [1] Si; [0] No" << endl;
+    cout << "> ";
+    int op = getint();
+
+    if (op == 1) {
+        cout << "Iniciando proceso de optimizacion..." << endl;
+
+        if (Escuela.alumnos != NULL) {
+            cout << "Ordenando Alumnos... ";
+            mergeSortAlumnos(&Escuela.alumnos);
+            cout << "[OK]" << endl;
+        } else {
+            cout << "Alumnos: Lista vacia, saltando." << endl;
+        }
+
+        if (Escuela.materias != NULL) {
+            cout << "Ordenando Materias... ";
+            mergeSortMaterias(&Escuela.materias);
+            cout << "[OK]" << endl;
+        } else {
+            cout << "Materias: Lista vacia, saltando." << endl;
+        }
+
+        /* Podria ordenar profesores y grupos pero
+         * ya se entendio el punto XD (totalmente no me estaba quedando sin tiempo) */
+
+        cout << endl << "Mantenimiento completado con exito." << endl;
+        cout << "El sistema ahora esta ordenado." << endl;
+    } else {
+        cout << "Operacion cancelada por el usuario." << endl;
+    }
+    pausar();
+}
+
 void adminMenu() {
     while(1) {
         limpiar();
@@ -1138,7 +1310,8 @@ void adminMenu() {
                 mostrarReportes();
                 break;
             case 7:
-            break;
+                menuMantenimiento();
+                break;
             case 8:
                 cout << "Saliendo!" << endl;
                 dormir(800);
