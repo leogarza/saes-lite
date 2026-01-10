@@ -129,7 +129,7 @@ void insertarNodo(void** cabeza, void* nuevo) {
 
     nuevoNodo->sig = NULL;
 
-    if(head == NULL) {
+    if(*head == NULL) {
         /* la lista esta vacia */
         *head = nuevoNodo;
     } else {
