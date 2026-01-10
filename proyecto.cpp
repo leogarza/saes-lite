@@ -289,7 +289,7 @@ void adminMenu() {
 
         switch(opcion) {
             case 1:
-                cout << "Opcion 1" << endl;
+                gestionMaterias();
                 break;
             case 2:
                 cout << "Opcion 2" << endl;
