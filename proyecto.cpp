@@ -24,9 +24,9 @@ using namespace std;
  * seguro, verdad? XD
  * era curso de algoritmos y estructuras
  * no de ciberseguridad ;) */
-#define ADMINUSER "admin"
+#define ADMINUSER 1234
 #define ADMINPASS "password123"
-static bool adminMode = false;
+unsigned usuarioActual = 0;
 
 /* tambien deberia haber un generador
  * de identificadores unicos pero
@@ -43,10 +43,12 @@ struct Materia {
     float creditos;
 };
 
+enum DiaSemana { LUN, MAR, MIE, JUE, VIE, SAB };
+
 struct BloqueHorario {
     struct BloqueHorario* sig;
 
-    enum { LUN, MAR, MIE, JUE, VIE, SAB } dia;
+    DiaSemana dia;
     unsigned char hora; /* hora de inicio */
     unsigned char minuto; /* minuto de inicio */
     unsigned char edificio; /* numero de edificio */
@@ -87,6 +89,8 @@ struct Alumno {
     Inscripcion* materiasInscritas;
 };
 
+Alumno* alumnoLogeado = NULL;
+
 struct Grupo {
     struct Grupo* sig;
 
@@ -118,7 +122,7 @@ struct NodoGenerico {
 /* -- funciones de manejo de listas -- */
 
 /*
- * @details funcion para insertar un nodo generico
+ * @details funcion para insertar un nodo generico (al final)
  * @param[in, out] cabeza el puntero al primer elemento de la lista
  * @param[in] nuevo el puntero al nodo nuevo al cual insertar
  */
@@ -197,7 +201,7 @@ char* gettext(bool password = 0);
 
 /* @details Espera al que el usuario ingrese un entero
  * @return el entero del usuario o 0 si no fue valido */
-int getint();
+long getint();
 
 /* @details espera al que el usuario ingrese un flotante
  * @return el flotante ingresado por el usuario
@@ -217,27 +221,38 @@ void pausar();
  * @return
  */
 bool login() {
-    char* user;
+    long boleta;
     char* password;
 
     limpiar();
     cout << "===========================================" << endl;
     cout << "   Sistema Administrativo Escolar (LITE)" << endl;
     cout << "===========================================" << endl;
-    cout << "| Datos de admin | Usuario: " << ADMINUSER << " --- Clave: " << ADMINPASS << endl;
-    cout << "Ingrese usuario: " << endl;
-    user = gettext();
+    cout << "| Datos de admin | Boleta: " << ADMINUSER << " --- Clave: " << ADMINPASS << endl;
+    cout << "Ingrese boleta: " << endl;
+    boleta = getint();
     cout << "Ingrese clave: " << endl;
     password = gettext(true);
 
-    if(strcmp(user, ADMINUSER) == 0) {
+    if(boleta == ADMINUSER) {
         if (strcmp(password, ADMINPASS) == 0) {
             cout << "CHEAT CODE: MODO ADMIN ACTIVADO" << endl;
-            adminMode = true;
+            usuarioActual = ADMINUSER;
+        }
+    } else {
+    Alumno* actual = Escuela.alumnos;
+    usuarioActual = 0;
+    alumnoLogeado = NULL;
+    while(actual != NULL) {
+        if(actual->boleta == boleta) {
+            if(strcmp(actual->password, password) == 0) {
+                usuarioActual = actual->boleta;
+                alumnoLogeado = actual;
+            }
         }
     }
+    }
 
-    free(user);
     free(password);
 
     dormir(1000);
@@ -428,6 +443,205 @@ void gestionProfesores() {
     }
 }
 
+void agregarGrupo() {
+    limpiar();
+    cout << "============================" << endl
+         << "       AGREGAR GRUPO        " << endl
+         << "============================" << endl;
+
+    if (Escuela.materias == NULL || Escuela.profesores == NULL) {
+        cout << "Error: Se requieren Materias y Profesores registrados." << endl;
+        dormir(1000);
+        return;
+    }
+
+    /* seleccionar Materia */
+    cout << "Ingrese el codigo de la Materia para el grupo:" << endl;
+    char* codigoMat = gettext();
+    Materia* matActual = Escuela.materias;
+    unsigned int uidMateria = 0;
+    bool encontrada = false;
+
+    while(matActual != NULL) {
+        if(strcmp(matActual->codigo, codigoMat) == 0) {
+            uidMateria = matActual->uid;
+            encontrada = true;
+            cout << "Materia seleccionada: " << matActual->nombre << endl;
+            break;
+        }
+        matActual = matActual->sig;
+    }
+    free(codigoMat);
+
+    if(!encontrada) {
+        cout << "Materia no encontrada." << endl;
+        dormir(800);
+        return;
+    }
+
+    /* seleccionar profesor */
+    cout << "Ingrese el ID del Profesor:" << endl;
+    int idProf = getint();
+    Profesor* profActual = Escuela.profesores;
+    unsigned int uidProfesor = 0;
+    encontrada = false;
+
+    while(profActual != NULL) {
+        if(profActual->uid == (unsigned)idProf) {
+            uidProfesor = profActual->uid;
+            encontrada = true;
+            cout << "Profesor seleccionado: " << profActual->nombre << endl;
+            break;
+        }
+        profActual = profActual->sig;
+    }
+
+    if(!encontrada) {
+        cout << "Profesor no encontrado." << endl;
+        dormir(800);
+        return;
+    }
+
+    /* datos generales del grupo */
+    cout << "Clave del Grupo (ej. 2CV1):" << endl;
+    char* clave = gettext();
+    cout << "Cupo Maximo:" << endl;
+    int cupo = getint();
+
+    BloqueHorario* listaHorario = NULL;
+
+    while(1) {
+        cout << "--------------------------------" << endl;
+        cout << "Agregar bloque de horario? [1] Si; [0] No" << endl;
+        cout << "> ";
+        int op = getint();
+        if(op != 1) break;
+
+        BloqueHorario* bloque = (BloqueHorario*)malloc(sizeof(BloqueHorario));
+        if(!bloque) continue;
+
+        cout << "Dia (0=LUN, 1=MAR, 2=MIE, 3=JUE, 4=VIE, 5=SAB): ";
+        int d = getint();
+        bloque->dia = (DiaSemana)d;
+        cout << "Hora inicio (0-23): ";
+        bloque->hora = (unsigned char)getint();
+        cout << "Minuto inicio (0-59): ";
+        bloque->minuto = (unsigned char)getint();
+        cout << "Edificio (numero): ";
+        bloque->edificio = (unsigned char)getint();
+        cout << "Salon (numero): ";
+        bloque->salon = (unsigned short)getint();
+        cout << "Duracion (minutos): ";
+        bloque->duracionMin = (unsigned char)getint();
+
+        bloque->sig = NULL;
+
+        insertarNodo((void**)&listaHorario, bloque);
+    }
+
+    unsigned uid = contador++;
+    Grupo* grupo = (Grupo*)malloc(sizeof(Grupo));
+    if(!grupo) {
+        cout << "Error al crear grupo" << endl;
+        return;
+    }
+
+    grupo->uid = uid;
+    grupo->uidMateria = uidMateria;
+    grupo->uidProfesor = uidProfesor;
+    grupo->clave = clave;
+    grupo->cupoMax = cupo;
+    grupo->inscritos = 0;
+    grupo->horario = listaHorario;
+    grupo->sig = NULL;
+
+    insertarNodo((void**)&Escuela.grupos, grupo);
+    cout << "Agregado grupo " << clave << "!" << endl;
+    dormir(800);
+}
+
+void gestionGrupos() {
+    while(1) {
+    limpiar();
+    cout << "====================================" << endl;
+    cout << "          GESTOR DE GRUPOS          " << endl;
+    cout << "====================================" << endl;
+
+    if(Escuela.grupos == NULL) {
+        cout << "No hay grupos registrados." << endl;
+        cout << "Opciones: [1] Agregar grupo; [3] Salir" << endl;
+    } else {
+        cout << "Grupos disponibles: " << endl;
+        Grupo *act = Escuela.grupos;
+        while(act != NULL) {
+            /* se muestra el UID del grupo y su clave */
+            cout << "\t[ID " << act->uid << "] " << act->clave
+                 << " (Mat ID: " << act->uidMateria
+                 << ", Prof ID: " << act->uidProfesor << ")" << endl;
+
+            /* opcional: mostrar un resumen del horario */
+            BloqueHorario* h = act->horario;
+            while(h != NULL) {
+                cout << "\t   -> Dia: " << h->dia << " Hora: "
+                     << (int)h->hora << ":" << (int)h->minuto << endl;
+                h = h->sig;
+            }
+            act = act->sig;
+        };
+        cout << "Opciones: [1] Agregar grupo; [2] Borrar grupo; [3] Salir" << endl;
+    }
+
+    cout << "> ";
+    int opcion = getint();
+
+    switch (opcion) {
+        case 1:
+            agregarGrupo();
+            break;
+        case 2: {
+            if(Escuela.grupos == NULL) break;
+            cout << "Cual grupo borrar? (ingrese su UID de grupo):" << endl;
+            int opcionUid = getint();
+            Grupo* anterior = NULL;
+            Grupo* actual = Escuela.grupos;
+            bool borrado = false;
+            while(actual != NULL) {
+                    if(actual->uid == (unsigned)opcionUid) {
+                        cout << "Borrando grupo " << actual->clave << "..." << endl;
+                        free(actual->clave);
+
+                        /* liberar memoria de la lista de horarios */
+                        BloqueHorario* hAct = actual->horario;
+                        BloqueHorario* hSig;
+                        while(hAct != NULL) {
+                            hSig = hAct->sig;
+                            free(hAct);
+                            hAct = hSig;
+                        }
+
+                        borrarSiguienteNodo((void**)&Escuela.grupos, anterior);
+                        cout << "Borrado!" << endl;
+                        borrado = true;
+                        break;
+                    }
+                anterior = actual;
+                actual = actual->sig;
+            }
+            if(!borrado) {
+                cout << "No se encontro grupo con ese UID" << endl;
+            }
+            break;
+        }
+        case 3:
+            cout << "Saliendo" << endl;
+            return;
+        default:
+            cout << "Opcion invalida!" << endl;
+    }
+    dormir(800);
+    }
+}
+
 void agregarAlumno() {
     limpiar();
     cout << "============================" << endl
@@ -554,7 +768,7 @@ void adminMenu() {
                 gestionAlumnos();
                 break;
             case 4:
-                cout << "Opcion 4" << endl;
+                gestionGrupos();
                 break;
             case 5:
                 cout << "Opcion 5" << endl;
@@ -576,12 +790,19 @@ void adminMenu() {
 int main() {
     while(1) {
     login();
-    if(adminMode) {
+    if(usuarioActual == ADMINUSER) {
         adminMenu();
+        continue;
+    } else if(usuarioActual == 0) {
+        cout << "Boleta o password incorrecto" << endl;
+        dormir(800);
         continue;
     }
 
     /* menu del usuario */
+    if(alumnoLogeado) {
+        cout << "Bienvenido " << alumnoLogeado->nombre << "!" << endl;
+    }
     /* ... */
     }
     return 0;
@@ -658,7 +879,7 @@ char* gettext(bool password) {
     return nuevostr;
 }
 
-int getint() {
+long getint() {
     char buffer[64];
     fgets(buffer, 64, stdin);
     return strtol(buffer, NULL, 10);
