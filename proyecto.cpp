@@ -1,3 +1,4 @@
+#include <cassert>
 #include <cstddef>
 #include <cstdio>
 #include <cstdlib>
@@ -98,6 +99,48 @@ struct {
     struct Materia* materias = NULL;
     struct Grupo* grupos = NULL;
 } Escuela;
+
+/* estructura de utilidad:
+ * como todas las estructuras tienen
+ * de primer miembro el puntero al
+ * siguiente nodo se pueden castear a esta
+ * estructura */
+struct NodoGenerico {
+    struct NodoGenerico* sig;
+};
+
+/* -- funciones de manejo de listas -- */
+
+/*
+ * @details funcion para insertar un nodo generico
+ * @param cabeza el puntero al primer elemento de la lista
+ * @param nuevo el puntero al nodo nuevo al cual insertar
+ */
+void insertarNodo(void** cabeza, void* nuevo) {
+    assert(nuevo && "el nodo nuevo es NULL!");
+    if(!nuevo) return;
+    NodoGenerico** head = (NodoGenerico**)cabeza;
+    NodoGenerico* nuevoNodo = (NodoGenerico*)nuevo;
+
+    nuevoNodo->sig = NULL;
+
+    /* la lista esta vacia */
+    if(head == NULL) {
+        *head = nuevoNodo;
+    } else {
+        NodoGenerico* actual = *head;
+        /* nos vamos hasta el final */
+        while(actual->sig != NULL) {
+            /* recorriendo uno a uno */
+            actual = actual->sig;
+        }
+        /* al final insertamos nuestro nuevo nodo :) */
+        actual->sig = nuevoNodo;
+    }
+}
+
+
+/* -- funciones utilidades -- */
 
 /* utilidad para controlar el flujo de caracteres
  * manualmente. (comportandose como getch de windows) */
