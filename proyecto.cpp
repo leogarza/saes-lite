@@ -428,6 +428,105 @@ void gestionProfesores() {
     }
 }
 
+void agregarAlumno() {
+    limpiar();
+    cout << "============================" << endl
+         << "       AGREGAR ALUMNO       " << endl
+         << "============================" << endl;
+
+    cout << "Nombre del alumno:" << endl;
+    char* nombre = gettext();
+    cout << "Password:" << endl;
+    char* password = gettext();
+    cout << "Numero de Boleta:" << endl;
+    unsigned int boleta = getint();
+    cout << "Periodo (Semestre): " << endl;
+    int periodo = getint();
+
+    Alumno* alumno = (Alumno*)malloc(sizeof(Alumno));
+    if(!alumno) {
+        cout << "No se pudo agregar alumno" << endl;
+        return;
+    }
+    alumno->nombre = nombre;
+    alumno->password = password;
+    alumno->boleta = boleta;
+    alumno->periodo = periodo;
+    alumno->materiasInscritas = NULL; /* inicia sin materias */
+    alumno->sig = NULL;
+
+    insertarNodo((void**)&Escuela.alumnos, alumno);
+    cout << "Agregado alumno!" << endl;
+    dormir(800);
+}
+
+void gestionAlumnos() {
+    while(1) {
+    limpiar();
+    cout << "====================================" << endl;
+    cout << "         GESTOR DE ALUMNOS          " << endl;
+    cout << "====================================" << endl;
+
+    if(Escuela.alumnos == NULL) {
+        /* se tienen que agregar alumnos */
+        cout << "No hay alumnos." << endl;
+        cout << "Se tienen que agregar alumnos" << endl;
+        dormir(1000);
+        agregarAlumno();
+        continue;
+    }
+
+    cout << "Alumnos registrados: " << endl;
+    Alumno *act = Escuela.alumnos;
+    while(act != NULL) {
+        cout << "\tBoleta " << act->boleta << ": " << act->nombre << endl;
+        act = act->sig;
+    };
+
+    cout << "Opciones: [1] Agregar alumno; [2] Borrar alumno; [3] Salir" << endl;
+    cout << "> ";
+    int opcion = getint();
+    switch (opcion) {
+        case 1:
+            agregarAlumno();
+            break;
+        case 2: {
+            cout << "Cual alumno borrar? (ingrese su boleta):" << endl;
+            unsigned int opcionBoleta = getint();
+            Alumno* anterior = NULL;
+            Alumno* actual = Escuela.alumnos;
+            bool borrado = false;
+            while(actual != NULL) {
+                    if(actual->boleta == opcionBoleta) {
+                        cout << "Borrando alumno con boleta " << opcionBoleta << "!" << endl;
+                        free(actual->nombre);
+                        free(actual->password);
+                        /* TODO: aqui tambien deberiamos liberar la memoria de
+                         * materiasInscritas si tuviera, pero se deja asi
+                         * por que todavia no lo he hecho */
+                        borrarSiguienteNodo((void**)&Escuela.alumnos, anterior);
+                        cout << "Borrado!" << endl;
+                        borrado = true;
+                        break;
+                    }
+                anterior = actual;
+                actual = actual->sig;
+            }
+            if(!borrado) {
+                cout << "No se encontro tal alumno con esa boleta" << endl;
+            }
+            break;
+        }
+        case 3:
+            cout << "Saliendo" << endl;
+            return;
+        default:
+            cout << "Opcion invalida!" << endl;
+    }
+    dormir(800);
+    }
+}
+
 void adminMenu() {
     while(1) {
         limpiar();
@@ -452,7 +551,7 @@ void adminMenu() {
                 gestionProfesores();
                 break;
             case 3:
-                cout << "Opcion 3" << endl;
+                gestionAlumnos();
                 break;
             case 4:
                 cout << "Opcion 4" << endl;
