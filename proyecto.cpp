@@ -248,10 +248,10 @@ void gestionMaterias() {
     }
     cout << "Materias disponibles: " << endl;
     Materia *act = Escuela.materias;
-    while(act->sig != NULL) {
+    do {
         cout << "\t" << act->codigo << ": " << act->nombre << endl;
         act = act->sig;
-    }
+    } while (act != NULL);
     cout << "Opciones: [1] Agregar materia; [2] Borrar materia; [3] Salir" << endl;
     cout << "> ";
     int opcion = getint();
