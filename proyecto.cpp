@@ -288,6 +288,7 @@ void gestionMaterias() {
         cout << "Se tienen que agregar materias" << endl;
         dormir(1000);
         agregarMateria();
+        continue;
     }
     cout << "Materias disponibles: " << endl;
     Materia *act = Escuela.materias;
@@ -337,8 +338,94 @@ void gestionMaterias() {
     }
 }
 
-void gestionGrupos() {
+void agregarProfesor() {
+    limpiar();
+    cout << "============================" << endl
+         << "      AGREGAR PROFESOR      " << endl
+         << "============================" << endl;
 
+    cout << "Nombre del profesor:" << endl;
+    char* nombre = gettext();
+
+    /* el contador es global btw */
+    unsigned uid = contador++;
+
+    Profesor* profesor = (Profesor*)malloc(sizeof(Profesor));
+    if(!profesor) {
+        cout << "No se pudo agregar profesor" << endl;
+        return;
+    }
+    profesor->nombre = nombre;
+    profesor->uid = uid;
+    profesor->sig = NULL;
+
+    insertarNodo((void**)&Escuela.profesores, profesor);
+    cout << "Agregado profesor!" << endl;
+    dormir(800);
+}
+
+void gestionProfesores() {
+    while(1) {
+    limpiar();
+    cout << "====================================" << endl;
+    cout << "        GESTOR DE PROFESORES        " << endl;
+    cout << "====================================" << endl;
+
+    if(Escuela.profesores == NULL) {
+        /* se tienen que agregar profesores */
+        cout << "No hay profesores." << endl;
+        cout << "Se tienen que agregar profesores" << endl;
+        dormir(1000);
+        agregarProfesor();
+        continue;
+    }
+
+    cout << "Profesores disponibles: " << endl;
+    Profesor *act = Escuela.profesores;
+    while(act != NULL) {
+        /* se usa UID ya que un profesor no tiene codigo xd */
+        cout << "\tID " << act->uid << ": " << act->nombre << endl;
+        act = act->sig;
+    };
+
+    cout << "Opciones: [1] Agregar profesor; [2] Borrar profesor; [3] Salir" << endl;
+    cout << "> ";
+    int opcion = getint();
+    switch (opcion) {
+        case 1:
+            agregarProfesor();
+            break;
+        case 2: {
+            cout << "Cual profesor borrar? (ingrese su ID):" << endl;
+            int opcionId = getint();
+            Profesor* anterior = NULL;
+            Profesor* actual = Escuela.profesores;
+            bool borrado = false;
+            while(actual != NULL) {
+                    if(actual->uid == opcionId) {
+                        cout << "Borrando profesor ID " << opcionId << "!" << endl;
+                        free(actual->nombre);
+                        borrarSiguienteNodo((void**)&Escuela.profesores, anterior);
+                        cout << "Borrado!" << endl;
+                        borrado = true;
+                        break;
+                    }
+                anterior = actual;
+                actual = actual->sig;
+            }
+            if(!borrado) {
+                cout << "No se encontro tal profesor con ese ID" << endl;
+            }
+            break;
+        }
+        case 3:
+            cout << "Saliendo" << endl;
+            return;
+        default:
+            cout << "Opcion invalida!" << endl;
+    }
+    dormir(800);
+    }
 }
 
 void adminMenu() {
@@ -358,11 +445,11 @@ void adminMenu() {
         int opcion = getint();
 
         switch(opcion) {
-            case 1:
+            case 1: /* gestion de materias */
                 gestionMaterias();
                 break;
-            case 2:
-                cout << "Opcion 2" << endl;
+            case 2: /* gestion de profesores */
+                gestionProfesores();
                 break;
             case 3:
                 cout << "Opcion 3" << endl;
