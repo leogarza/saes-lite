@@ -28,6 +28,11 @@ using namespace std;
 #define ADMINPASS "password123"
 static bool adminMode = false;
 
+/* tambien deberia haber un generador
+ * de identificadores unicos pero
+ * ya no hubo presupuesto */
+ unsigned contador = 0;
+
 struct Materia {
     struct Materia* sig;
 
@@ -124,7 +129,6 @@ void insertarNodo(void** cabeza, void* nuevo) {
 
     nuevoNodo->sig = NULL;
 
-    /* la lista esta vacia */
     if(head == NULL) {
         /* la lista esta vacia */
         *head = nuevoNodo;
@@ -139,7 +143,6 @@ void insertarNodo(void** cabeza, void* nuevo) {
         actual->sig = nuevoNodo;
     }
 }
-
 
 /* -- funciones utilidades -- */
 
@@ -202,6 +205,46 @@ bool login() {
     dormir(1000);
 
     return true;
+}
+
+void agregarMateria() {
+    limpiar();
+    cout << "============================" << endl
+         << "      AGREGAR MATERIA       " << endl
+         << "============================" << endl;
+
+    cout << "Nombre de la materia:" << endl;
+    char* nombre = gettext();
+    cout << "Codigo de la materia: " << endl;
+    char* codigo = gettext();
+    cout << "Periodo (Semestre): " << endl;
+    int periodo = getint();
+    cout << "Creditos: " << endl;
+    float creditos = getfloat();
+    unsigned uid = contador++;
+    Materia* materia  = (Materia*)malloc(sizeof(Materia));
+    materia->nombre = nombre;
+    materia->codigo = codigo;
+    materia->periodo = periodo;
+    materia->creditos = creditos;
+    insertarNodo((void**)&Escuela.materias, materia);
+    cout << "Agregada materia!" << endl;
+    dormir(800);
+}
+
+void gestionMaterias() {
+    limpiar();
+    cout << "====================================" << endl;
+    cout << "        GESTOR DE MATERIAS          " << endl;
+    cout << "====================================" << endl;
+    if(Escuela.materias == NULL) {
+        /* se tienen que agregar materias */
+        cout << "No hay materias." << endl;
+        cout << "Se tienen que agregar materias" << endl;
+        dormir(1000);
+        agregarMateria();
+    }
+
 }
 
 void adminMenu() {
