@@ -210,7 +210,7 @@ float getfloat();
 
 /*
  * @details hace que el usuario tenga que presionar enter
- * para continuar.
+ * para continuar. (muestra el mensaje con esa instruccion)
  */
 void pausar();
 
@@ -742,6 +742,365 @@ void gestionAlumnos() {
     }
 }
 
+void inscribirMateria(Alumno* alumno) {
+    limpiar();
+    cout << "============================" << endl
+         << "     INSCRIBIR MATERIA      " << endl
+         << "============================" << endl;
+
+    if (Escuela.grupos == NULL) {
+        cout << "No hay grupos disponibles para inscribir." << endl;
+        dormir(1000);
+        return;
+    }
+
+    cout << "Grupos disponibles:" << endl;
+    Grupo* gAct = Escuela.grupos;
+    while(gAct != NULL) {
+        /* calculamos cupo disponible */
+        int disponibles = gAct->cupoMax - gAct->inscritos;
+        if(disponibles > 0) {
+            /* Hay que buscar el nombre de la materia para que se vea bonito */
+            char* nomMat = (char*)"Desconocida";
+            Materia* m = Escuela.materias;
+            while(m != NULL) {
+                if(m->uid == gAct->uidMateria) {
+                    nomMat = m->nombre;
+                    break;
+                }
+                m = m->sig;
+            }
+            cout << "\t[ID " << gAct->uid << "] " << gAct->clave
+                 << " - " << nomMat
+                 << " (Cupo: " << disponibles << ")" << endl;
+        }
+        gAct = gAct->sig;
+    }
+
+    cout << "Ingrese el ID del Grupo a inscribir:" << endl;
+    int idGrupoSel = getint();
+
+    /* verificamos que el grupo exista y tenga cupo */
+    Grupo* grupoSeleccionado = NULL;
+    gAct = Escuela.grupos;
+    while(gAct != NULL) {
+        if(gAct->uid == (unsigned)idGrupoSel) {
+            grupoSeleccionado = gAct;
+            break;
+        }
+        gAct = gAct->sig;
+    }
+
+    if(!grupoSeleccionado) {
+        cout << "Grupo no encontrado." << endl;
+        dormir(800);
+        return;
+    }
+
+    if(grupoSeleccionado->inscritos >= grupoSeleccionado->cupoMax) {
+        cout << "El grupo esta lleno!" << endl;
+        dormir(800);
+        return;
+    }
+
+    /* validamos que no este ya inscrito en ese grupo */
+    Inscripcion* iAct = alumno->materiasInscritas;
+    while(iAct != NULL) {
+        if(iAct->idGrupo == grupoSeleccionado->uid) {
+            cout << "El alumno ya esta inscrito en este grupo." << endl;
+            dormir(800);
+            return;
+        }
+        iAct = iAct->sig;
+    }
+
+    /* crear inscripcion */
+    Inscripcion* nuevaInsc = (Inscripcion*)malloc(sizeof(Inscripcion));
+    if(!nuevaInsc) {
+        cout << "Error de memoria al inscribir" << endl;
+        return;
+    }
+
+    nuevaInsc->idGrupo = grupoSeleccionado->uid;
+    /* inicializar calificaciones en 0 */
+    for(int k=0; k < CALFIFACIONTAM; k++) {
+        nuevaInsc->calificaciones[k] = 0.0f;
+    }
+    nuevaInsc->sig = NULL;
+
+    insertarNodo((void**)&alumno->materiasInscritas, nuevaInsc);
+
+    /* actualizar cupo del grupo */
+    grupoSeleccionado->inscritos++;
+
+    cout << "Inscripcion exitosa!" << endl;
+    dormir(800);
+}
+
+void gestionInscripciones() {
+    limpiar();
+    cout << "====================================" << endl;
+    cout << "      GESTION DE INSCRIPCIONES      " << endl;
+    cout << "====================================" << endl;
+
+    if(Escuela.alumnos == NULL) {
+        cout << "No hay alumnos registrados." << endl;
+        dormir(1000);
+        return;
+    }
+
+    cout << "Ingrese la boleta del alumno:" << endl;
+    unsigned int boleta = getint();
+
+    Alumno* alumno = NULL;
+    Alumno* act = Escuela.alumnos;
+    while(act != NULL) {
+        if(act->boleta == boleta) {
+            alumno = act;
+            break;
+        }
+        act = act->sig;
+    }
+
+    if(!alumno) {
+        cout << "Alumno no encontrado." << endl;
+        dormir(800);
+        return;
+    }
+
+    /* submenu del alumno */
+    while(1) {
+        limpiar();
+        cout << "Alumno: " << alumno->nombre << " (Boleta: " << alumno->boleta << ")" << endl;
+        cout << "------------------------------------" << endl;
+        cout << "Materias Inscritas:" << endl;
+
+        Inscripcion* ins = alumno->materiasInscritas;
+        if(ins == NULL) {
+            cout << "\t(Sin inscripciones)" << endl;
+        } else {
+            while(ins != NULL) {
+                /* buscar datos del grupo para mostrar algo util */
+                Grupo* g = Escuela.grupos;
+                char* claveG = (char*)"???";
+                while(g != NULL) {
+                    if(g->uid == ins->idGrupo) {
+                        claveG = g->clave;
+                        break;
+                    }
+                    g = g->sig;
+                }
+                cout << "\tGrupo ID " << ins->idGrupo << " [" << claveG << "]" << endl;
+                ins = ins->sig;
+            }
+        }
+        cout << "------------------------------------" << endl;
+        cout << "Opciones: [1] Inscribir materia; [2] Dar de baja; [3] Regresar" << endl;
+        cout << "> ";
+        int opcion = getint();
+
+        switch(opcion) {
+            case 1:
+                inscribirMateria(alumno);
+                break;
+            case 2: {
+                if(alumno->materiasInscritas == NULL) {
+                    cout << "No tiene materias para dar de baja." << endl;
+                    break;
+                }
+                cout << "Ingrese ID del Grupo a dar de baja:" << endl;
+                int idBaja = getint();
+
+                Inscripcion* prev = NULL;
+                Inscripcion* curr = alumno->materiasInscritas;
+                bool borrado = false;
+
+                while(curr != NULL) {
+                    if(curr->idGrupo == (unsigned)idBaja) {
+                        /* tambien hay que bajar el contador del grupo */
+                        Grupo* g = Escuela.grupos;
+                        while(g != NULL) {
+                            if(g->uid == curr->idGrupo) {
+                                if(g->inscritos > 0) g->inscritos--;
+                                break;
+                            }
+                            g = g->sig;
+                        }
+
+                        borrarSiguienteNodo((void**)&alumno->materiasInscritas, prev);
+                        cout << "Materia dada de baja." << endl;
+                        borrado = true;
+                        break;
+                    }
+                    prev = curr;
+                    curr = curr->sig;
+                }
+                if(!borrado) cout << "No se encontro inscripcion con ese ID de grupo." << endl;
+                dormir(800);
+                break;
+            }
+            case 3:
+                return;
+            default:
+                cout << "Opcion invalida!" << endl;
+                dormir(800);
+        }
+    }
+}
+
+void reporteAlumnosDetallado() {
+    limpiar();
+    cout << "------------------------------------" << endl;
+    cout << "      REPORTE DETALLADO ALUMNOS     " << endl;
+    cout << "------------------------------------" << endl;
+
+    if(Escuela.alumnos == NULL) {
+        cout << "No hay alumnos registrados." << endl;
+        return;
+    }
+
+    Alumno* aAct = Escuela.alumnos;
+    while(aAct != NULL) {
+        cout << "Boleta: " << aAct->boleta << " | Nombre: " << aAct->nombre
+             << " | Semestre: " << aAct->periodo << endl;
+
+        /* listar materias inscritas */
+        Inscripcion* iAct = aAct->materiasInscritas;
+        if(iAct == NULL) {
+            cout << "\t(Sin materias inscritas)" << endl;
+        } else {
+            while(iAct != NULL) {
+                /* necesitamos buscar info del grupo para saber la materia */
+                Grupo* g = Escuela.grupos;
+                char* nombreMat = (char*)"Desc.";
+                char* claveG = (char*)"---";
+
+                while(g != NULL) {
+                    if(g->uid == iAct->idGrupo) {
+                        claveG = g->clave;
+                        /* y ahora buscamos la materia dentro del grupo xd */
+                        Materia* m = Escuela.materias;
+                        while(m != NULL) {
+                            if(m->uid == g->uidMateria) {
+                                nombreMat = m->nombre;
+                                break;
+                            }
+                            m = m->sig;
+                        }
+                        break;
+                    }
+                    g = g->sig;
+                }
+
+                cout << "\t-> Grupo " << claveG << ": " << nombreMat << endl;
+
+                /* calculamos promedio simple */
+                float suma = 0;
+                int c = 0;
+                for(int k=0; k<FINAL; k++) { /* promedio de parciales */
+                     if(iAct->calificaciones[k] > 0) {
+                        suma += iAct->calificaciones[k];
+                        c++;
+                     }
+                }
+                if(c > 0)
+                    cout << "\t   Promedio parciales: " << (suma/c) << endl;
+
+                iAct = iAct->sig;
+            }
+        }
+        cout << "------------------------------------" << endl;
+        aAct = aAct->sig;
+    }
+}
+
+void reporteGruposDetallado() {
+    limpiar();
+    cout << "------------------------------------" << endl;
+    cout << "       REPORTE DETALLADO GRUPOS     " << endl;
+    cout << "------------------------------------" << endl;
+
+    if(Escuela.grupos == NULL) {
+        cout << "No hay grupos creados." << endl;
+        return;
+    }
+
+    Grupo* gAct = Escuela.grupos;
+    while(gAct != NULL) {
+        /* Buscar nombre materia */
+        char* matName = (char*)"Desconocida";
+        Materia* m = Escuela.materias;
+        while(m != NULL) {
+            if(m->uid == gAct->uidMateria) {
+                matName = m->nombre;
+                break;
+            }
+            m = m->sig;
+        }
+
+        /* Buscar nombre profesor */
+        char* profName = (char*)"Sin Asignar";
+        Profesor* p = Escuela.profesores;
+        while(p != NULL) {
+            if(p->uid == gAct->uidProfesor) {
+                profName = p->nombre;
+                break;
+            }
+            p = p->sig;
+        }
+
+        cout << "Grupo: " << gAct->clave << " [ID " << gAct->uid << "]" << endl;
+        cout << "Materia: " << matName << endl;
+        cout << "Profesor: " << profName << endl;
+        cout << "Cupo: " << gAct->inscritos << "/" << gAct->cupoMax << endl;
+
+        cout << "Horario:" << endl;
+        BloqueHorario* h = gAct->horario;
+        const char* dias[] = {"LUN","MAR","MIE","JUE","VIE","SAB"};
+        while(h != NULL) {
+            cout << "\t" << dias[h->dia] << " "
+                 << (int)h->hora << ":" << (int)(h->minuto < 10 ? 0 : h->minuto) /* hack para el 0 */
+                 << (int)h->minuto
+                 << " (Salon " << h->salon << ")" << endl;
+            h = h->sig;
+        }
+        cout << "------------------------------------" << endl;
+
+        gAct = gAct->sig;
+    }
+}
+
+void mostrarReportes() {
+    while(1) {
+        limpiar();
+        cout << "============================" << endl
+             << "     REPORTES GENERALES     " << endl
+             << "============================" << endl;
+        cout << "[1] Listado de Alumnos y Materias" << endl;
+        cout << "[2] Listado de Grupos y Horarios" << endl;
+        cout << "[3] Regresar al menu principal" << endl;
+
+        cout << "> ";
+        int opcion = getint();
+
+        switch(opcion) {
+            case 1:
+                reporteAlumnosDetallado();
+                pausar();
+                break;
+            case 2:
+                reporteGruposDetallado();
+                pausar();
+                break;
+            case 3:
+                return;
+            default:
+                cout << "Opcion invalida" << endl;
+                dormir(500);
+        }
+    }
+}
+
 void adminMenu() {
     while(1) {
         limpiar();
@@ -752,7 +1111,8 @@ void adminMenu() {
         cout << "[4] Gestion de Grupos" << endl;
         cout << "[5] Inscripciones" << endl;
         cout << "[6] Reportes Generales" << endl;
-        cout << "[7] Salir" << endl;
+        cout << "[8] Mantenimiento" << endl;
+        cout << "[8] Salir" << endl;
 
         cout << "Introduce el numero de la opcion: " << endl;
         cout << "> ";
@@ -772,12 +1132,14 @@ void adminMenu() {
                 gestionGrupos();
                 break;
             case 5:
-                cout << "Opcion 5" << endl;
+                gestionInscripciones();
                 break;
             case 6:
-                cout << "Opcion 6" << endl;
+                mostrarReportes();
                 break;
             case 7:
+            break;
+            case 8:
                 cout << "Saliendo!" << endl;
                 dormir(800);
                 return;
