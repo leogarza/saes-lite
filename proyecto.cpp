@@ -808,7 +808,7 @@ void inscribirMateria(Alumno* alumno) {
     while(iAct != NULL) {
         if(iAct->idGrupo == grupoSeleccionado->uid) {
             cout << "El alumno ya esta inscrito en este grupo." << endl;
-            dormir(800);
+            pause();
             return;
         }
         iAct = iAct->sig;
@@ -1329,26 +1329,213 @@ void adminMenu() {
  */
 void inicializarDatosPrueba();
 
-int main() {
-    inicializarDatosPrueba(); /* iniciar datos para demo */
-    while(1) {
-    login();
-    if(usuarioActual == ADMINUSER) {
-        adminMenu();
-        continue;
-    } else if(usuarioActual == 0) {
-        cout << "Boleta o password incorrecto" << endl;
-        dormir(800);
-        continue;
+/* -- FUNCIONES DE INTERFAZ DE ALUMNO -- */
+
+/*
+ * @details Muestra las materias que el alumno tiene inscritas,
+ * sus profesores, horarios y calificaciones actuales.
+ */
+void alumnoVerHorario() {
+    limpiar();
+    cout << "============================================" << endl;
+    cout << "           MI HORARIO Y KARDEX              " << endl;
+    cout << "============================================" << endl;
+
+    if (alumnoLogeado->materiasInscritas == NULL) {
+        cout << "No tienes materias inscritas aun." << endl;
+        cout << "Ve a inscripciones para agregar materias." << endl;
+        return;
     }
 
-    limpiar();
-    /* menu del usuario */
-    if(alumnoLogeado) {
-        cout << "Bienvenido " << alumnoLogeado->nombre << "!" << endl;
-        pausar();
+    Inscripcion* ins = alumnoLogeado->materiasInscritas;
+    while(ins != NULL) {
+        /* toca buscar toda la info relacional otra vez
+         * esto pasa por no usar una base de datos de verdad xD */
+        Grupo* g = Escuela.grupos;
+        Grupo* miGrupo = NULL;
+        while(g != NULL) {
+            if(g->uid == ins->idGrupo) {
+                miGrupo = g;
+                break;
+            }
+            g = g->sig;
+        }
+
+        if(miGrupo) {
+            /* buscamos nombre materia */
+            char* nomMat = (char*)"---";
+            Materia* m = Escuela.materias;
+            while(m != NULL) {
+                if(m->uid == miGrupo->uidMateria) {
+                    nomMat = m->nombre;
+                    break;
+                }
+                m = m->sig;
+            }
+
+            /* buscamos profe */
+            char* nomProf = (char*)"---";
+            Profesor* p = Escuela.profesores;
+            while(p != NULL) {
+                if(p->uid == miGrupo->uidProfesor) {
+                    nomProf = p->nombre;
+                    break;
+                }
+                p = p->sig;
+            }
+
+            cout << "Materia: " << nomMat << " (" << miGrupo->clave << ")" << endl;
+            cout << "Profesor: " << nomProf << " | ID Grupo: " << miGrupo->uid << endl;
+
+            /* mostrar horario resumido */
+            BloqueHorario* h = miGrupo->horario;
+            const char* dias[] = {"LUN","MAR","MIE","JUE","VIE","SAB"};
+            cout << "Horario: ";
+            while(h != NULL) {
+                cout << dias[h->dia] << " " << (int)h->hora << ":00 ";
+                h = h->sig;
+            }
+            cout << endl;
+
+            /* calificaciones */
+            cout << "Calificaciones: P1[" << ins->calificaciones[PRIMERPAR] << "] "
+                 << "P2[" << ins->calificaciones[SEGUNDOPAR] << "] "
+                 << "P3[" << ins->calificaciones[TERCERPAR] << "]" << endl;
+            cout << "--------------------------------------------" << endl;
+        }
+        ins = ins->sig;
     }
-    /* ... */
+}
+
+/*
+ * @details Permite al alumno darse de baja de una materia.
+ * (Copiado y pegado un poco de la logica del admin, pero
+ * adaptado para que no borre cosas que no son suyas)
+ */
+void alumnoDarBaja() {
+    limpiar();
+    cout << "============================================" << endl;
+    cout << "             DAR DE BAJA MATERIA            " << endl;
+    cout << "============================================" << endl;
+
+    if(alumnoLogeado->materiasInscritas == NULL) {
+        cout << "No tienes nada para dar de baja." << endl;
+        dormir(1000);
+        return;
+    }
+
+    /* listamos rapido para que sepa el ID */
+    Inscripcion* aux = alumnoLogeado->materiasInscritas;
+    cout << "Tus grupos inscritos (IDs): ";
+    while(aux != NULL) {
+        cout << "[" << aux->idGrupo << "] ";
+        aux = aux->sig;
+    }
+    cout << endl << endl;
+
+    cout << "Ingrese el ID del GRUPO para dar de baja:" << endl;
+    cout << "> ";
+    int idBaja = getint();
+
+    Inscripcion* prev = NULL;
+    Inscripcion* curr = alumnoLogeado->materiasInscritas;
+    bool encontrado = false;
+
+    while(curr != NULL) {
+        if(curr->idGrupo == (unsigned)idBaja) {
+            /* liberar el cupo en el grupo global */
+            Grupo* g = Escuela.grupos;
+            while(g != NULL) {
+                if(g->uid == curr->idGrupo) {
+                    if(g->inscritos > 0) g->inscritos--;
+                    cout << "Cupo actualizado en grupo " << g->clave << endl;
+                    break;
+                }
+                g = g->sig;
+            }
+
+            /* borrar nodo de la lista del alumno */
+            borrarSiguienteNodo((void**)&alumnoLogeado->materiasInscritas, prev);
+            cout << "Materia dada de baja correctamente." << endl;
+            encontrado = true;
+            break;
+        }
+        prev = curr;
+        curr = curr->sig;
+    }
+
+    if(!encontrado) {
+        cout << "No estas inscrito en un grupo con ese ID." << endl;
+    }
+    dormir(1000);
+}
+
+void alumnoMenu() {
+    while(1) {
+        limpiar();
+        /* un poco de info personal en el header */
+        cout << "============================================" << endl;
+        cout << "   Bienvenido, " << alumnoLogeado->nombre << endl;
+        cout << "   Boleta: " << alumnoLogeado->boleta << " | Semestre: " << alumnoLogeado->periodo << endl;
+        cout << "============================================" << endl;
+
+        cout << "[1] Ver Horario y Calificaciones" << endl;
+        cout << "[2] Inscribir Materias" << endl;
+        cout << "[3] Dar de Baja Materias" << endl;
+        cout << "[4] Cerrar Sesion" << endl;
+
+        cout << endl << "Seleccione una opcion: " << endl;
+        cout << "> ";
+        int opcion = getint();
+
+        switch(opcion) {
+            case 1:
+                alumnoVerHorario();
+                pausar();
+                break;
+            case 2:
+                /* reutilizamos la funcion que ya teniamos
+                 * total, recibe el puntero al alumno y ya */
+                inscribirMateria(alumnoLogeado);
+                break;
+            case 3:
+                alumnoDarBaja();
+                break;
+            case 4:
+                cout << "Cerrando sesion..." << endl;
+                alumnoLogeado = NULL; /* seguridad ante todo */
+                dormir(800);
+                return;
+            default:
+                cout << "Opcion no valida." << endl;
+                dormir(500);
+        }
+    }
+}
+
+int main() {
+    inicializarDatosPrueba(); /* iniciar datos para demo */
+
+    while(1) {
+        /* Bucle infinito del login hasta que se apague la compu
+         * o le den Ctrl+C */
+        bool exito = login();
+
+        if (!exito) continue; /* por si acaso el login retorna false */
+
+        if(usuarioActual == ADMINUSER) {
+            /* modo dios */
+            adminMenu();
+        }
+        else if(usuarioActual > 0 && alumnoLogeado != NULL) {
+            /* modo mortal (alumno) */
+            alumnoMenu();
+        }
+        else {
+            cout << "Boleta o password incorrecto" << endl;
+            cout << "(Intenta con 1234/password123 o 20230001/1234)" << endl;
+            pausar();
+        }
     }
     return 0;
 }
