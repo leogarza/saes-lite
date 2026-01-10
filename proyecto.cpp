@@ -81,6 +81,7 @@ struct Alumno {
     struct Alumno* sig;
 
     char *nombre;
+    char *password;
     unsigned int boleta;
     unsigned short int periodo;
     Inscripcion* materiasInscritas;
