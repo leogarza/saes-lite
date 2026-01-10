@@ -1150,7 +1150,14 @@ void adminMenu() {
     }
 }
 
+/*
+ * @details Carga datos falsos al sistema para pruebas rapidas
+ * Crea materias, profesores, grupos con horarios y un alumno inscrito.
+ */
+void inicializarDatosPrueba();
+
 int main() {
+    inicializarDatosPrueba(); /* iniciar datos para demo */
     while(1) {
     login();
     if(usuarioActual == ADMINUSER) {
@@ -1171,6 +1178,129 @@ int main() {
     /* ... */
     }
     return 0;
+}
+
+/* -- funcion auxiliar para duplicar strings --
+ * necesaria porque el sistema hace free() de los nombres
+ * y no podemos asignar literales directamente */
+char* clonarCadena(const char* origen) {
+    char* destino = (char*)malloc(strlen(origen) + 1);
+    if(destino) strcpy(destino, origen);
+    return destino;
+}
+
+void inicializarDatosPrueba() {
+    cout << "Cargando datos de prueba..." << endl;
+
+    /* --- 1. Crear Materias --- */
+
+    /* Materia 1: Algoritmos */
+    unsigned int uidMat1 = contador++;
+    Materia* m1 = (Materia*)malloc(sizeof(Materia));
+    m1->uid = uidMat1;
+    m1->nombre = clonarCadena("Algoritmos y Estructuras");
+    m1->codigo = clonarCadena("COM101");
+    m1->periodo = 3;
+    m1->creditos = 8.5;
+    m1->sig = NULL;
+    insertarNodo((void**)&Escuela.materias, m1);
+
+    /* Materia 2: Calculo */
+    unsigned int uidMat2 = contador++;
+    Materia* m2 = (Materia*)malloc(sizeof(Materia));
+    m2->uid = uidMat2;
+    m2->nombre = clonarCadena("Calculo");
+    m2->codigo = clonarCadena("MAT202");
+    m2->periodo = 1;
+    m2->creditos = 9.0;
+    m2->sig = NULL;
+    insertarNodo((void**)&Escuela.materias, m2);
+
+    /* --- 2. Crear Profesores --- */
+
+    /* Profe 1 */
+    unsigned int uidProf1 = contador++;
+    Profesor* p1 = (Profesor*)malloc(sizeof(Profesor));
+    p1->uid = uidProf1;
+    p1->nombre = clonarCadena("Alan Turing");
+    p1->sig = NULL;
+    insertarNodo((void**)&Escuela.profesores, p1);
+
+    /* Profe 2 */
+    unsigned int uidProf2 = contador++;
+    Profesor* p2 = (Profesor*)malloc(sizeof(Profesor));
+    p2->uid = uidProf2;
+    p2->nombre = clonarCadena("Ada Lovelace");
+    p2->sig = NULL;
+    insertarNodo((void**)&Escuela.profesores, p2);
+
+    /* --- 3. Crear Grupos y Horarios --- */
+
+    /* Grupo para Algoritmos (m1) con Turing (p1) */
+    unsigned int uidGrupo1 = contador++;
+    Grupo* g1 = (Grupo*)malloc(sizeof(Grupo));
+    g1->uid = uidGrupo1;
+    g1->uidMateria = uidMat1;
+    g1->uidProfesor = uidProf1;
+    g1->clave = clonarCadena("3CV1");
+    g1->cupoMax = 30;
+    g1->inscritos = 0;
+    g1->horario = NULL;
+    g1->sig = NULL;
+
+    /* Horario para g1: LUN 7:00 - 8:30 */
+    BloqueHorario* h1 = (BloqueHorario*)malloc(sizeof(BloqueHorario));
+    h1->dia = LUN;
+    h1->hora = 7;
+    h1->minuto = 0;
+    h1->edificio = 1;
+    h1->salon = 101;
+    h1->duracionMin = 90;
+    h1->sig = NULL;
+    insertarNodo((void**)&g1->horario, h1);
+
+    /* Agregamos el grupo a la escuela */
+    insertarNodo((void**)&Escuela.grupos, g1);
+
+    /* Grupo para Calculo (m2) con Lovelace (p2) */
+    unsigned int uidGrupo2 = contador++;
+    Grupo* g2 = (Grupo*)malloc(sizeof(Grupo));
+    g2->uid = uidGrupo2;
+    g2->uidMateria = uidMat2;
+    g2->uidProfesor = uidProf2;
+    g2->clave = clonarCadena("1CM5");
+    g2->cupoMax = 40;
+    g2->inscritos = 0;
+    g2->horario = NULL; /* sin horario definido por flojera */
+    g2->sig = NULL;
+    insertarNodo((void**)&Escuela.grupos, g2);
+
+    /* --- 4. Crear Alumnos --- */
+
+    /* Alumno de prueba */
+    Alumno* a1 = (Alumno*)malloc(sizeof(Alumno));
+    a1->nombre = clonarCadena("Pepe el Toro");
+    a1->password = clonarCadena("1234");
+    a1->boleta = 20230001;
+    a1->periodo = 3;
+    a1->materiasInscritas = NULL;
+    a1->sig = NULL;
+    insertarNodo((void**)&Escuela.alumnos, a1);
+
+    /* --- 5. Inscripcion Automatica --- */
+    /* Inscribimos a Pepe en Algoritmos (g1) */
+    Inscripcion* ins = (Inscripcion*)malloc(sizeof(Inscripcion));
+    ins->idGrupo = uidGrupo1;
+    for(int k=0; k < CALFIFACIONTAM; k++) ins->calificaciones[k] = 0.0f;
+    /* simulamos unas calificaciones */
+    ins->calificaciones[PRIMERPAR] = 8.5f;
+    ins->sig = NULL;
+
+    insertarNodo((void**)&a1->materiasInscritas, ins);
+    g1->inscritos++; /* IMPORTANTE: actualizar contador del grupo */
+
+    cout << "Datos cargados exitosamente!" << endl;
+    dormir(1000);
 }
 
 char gchar() {
