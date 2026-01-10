@@ -250,6 +250,7 @@ bool login() {
                 alumnoLogeado = actual;
             }
         }
+        actual = actual->sig;
     }
     }
 
@@ -799,9 +800,11 @@ int main() {
         continue;
     }
 
+    limpiar();
     /* menu del usuario */
     if(alumnoLogeado) {
         cout << "Bienvenido " << alumnoLogeado->nombre << "!" << endl;
+        pausar();
     }
     /* ... */
     }
