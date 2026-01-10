@@ -286,10 +286,10 @@ void gestionMaterias() {
     }
     cout << "Materias disponibles: " << endl;
     Materia *act = Escuela.materias;
-    do {
+    while(act != NULL) {
         cout << "\t" << act->codigo << ": " << act->nombre << endl;
         act = act->sig;
-    } while (act != NULL);
+    };
     cout << "Opciones: [1] Agregar materia; [2] Borrar materia; [3] Salir" << endl;
     cout << "> ";
     int opcion = getint();
@@ -297,9 +297,33 @@ void gestionMaterias() {
         case 1:
             agregarMateria();
             break;
-        case 2:
-            /* TODO: borrar materias */
+        case 2: {
+            cout << "Cual materia borrar? (ingrese su codigo):" << endl;
+            char* opcionmat = gettext();
+            Materia* anterior = NULL;
+            Materia* actual = Escuela.materias;
+            bool borrado = false;
+            while(actual != NULL) {
+                if(actual) {
+                    if(strcmp(actual->codigo, opcionmat) == 0) {
+                        cout << "Borrando " << opcionmat << "!" << endl;
+                        free(actual->codigo);
+                        free(actual->nombre);
+                        borrarSiguienteNodo((void**)&Escuela.materias, anterior);
+                        cout << "Borrado!" << endl;
+                        borrado = true;
+                        break;
+                    }
+                }
+                anterior = actual;
+                actual = actual->sig;
+            }
+            if(!borrado) {
+                cout << "No se encontra tal materia con ese codigo" << endl;
+            }
+            free(opcionmat);
             break;
+        }
         case 3:
             return;
         default:
