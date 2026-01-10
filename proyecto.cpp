@@ -113,8 +113,8 @@ struct NodoGenerico {
 
 /*
  * @details funcion para insertar un nodo generico
- * @param cabeza el puntero al primer elemento de la lista
- * @param nuevo el puntero al nodo nuevo al cual insertar
+ * @param[in, out] cabeza el puntero al primer elemento de la lista
+ * @param[in] nuevo el puntero al nodo nuevo al cual insertar
  */
 void insertarNodo(void** cabeza, void* nuevo) {
     assert(nuevo && "el nodo nuevo es NULL!");
@@ -126,6 +126,7 @@ void insertarNodo(void** cabeza, void* nuevo) {
 
     /* la lista esta vacia */
     if(head == NULL) {
+        /* la lista esta vacia */
         *head = nuevoNodo;
     } else {
         NodoGenerico* actual = *head;
@@ -153,10 +154,14 @@ char gchar();
  * free despues). o null si no se ingreso nada. */
 char* gettext(bool password = 0);
 
-/*
- * @details Espera al que el usuario ingrese un entero
+/* @details Espera al que el usuario ingrese un entero
  * @return el entero del usuario o 0 si no fue valido */
 int getint();
+
+/* @details espera al que el usuario ingrese un flotante
+ * @return el flotante ingresado por el usuario
+ */
+float getfloat();
 
 /*
  * @details hace que el usuario tenga que presionar enter
@@ -334,6 +339,12 @@ int getint() {
     char buffer[64];
     fgets(buffer, 64, stdin);
     return strtol(buffer, NULL, 10);
+}
+
+float getfloat() {
+    char buffer[64];
+    fgets(buffer, 64, stdin);
+    return strtof(buffer, NULL);
 }
 
 void pausar() {
