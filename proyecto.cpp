@@ -32,8 +32,8 @@ struct Materia {
     struct Materia* sig;
 
     unsigned int uid;
-    char nombre[64];
-    char codigo[6];
+    char *nombre;
+    char *codigo;
     unsigned short int periodo;
     float creditos;
 };
@@ -53,7 +53,7 @@ struct Profesor {
     struct Profesor* sig;
 
     unsigned int uid;
-    char nombre[64];
+    char *nombre;
 };
 
 enum CALIFICACION {
@@ -75,7 +75,7 @@ struct Inscripcion {
 struct Alumno {
     struct Alumno* sig;
 
-    char nombre[64];
+    char *nombre;
     unsigned int boleta;
     unsigned short int periodo;
     Inscripcion* materiasInscritas;
@@ -87,7 +87,7 @@ struct Grupo {
     unsigned int uid;
     unsigned int uidMateria;
     unsigned int uidProfesor;
-    char clave[6]; /* ej 2CV1 */
+    char *clave; /* ej 2CV1 */
     struct BloqueHorario* horario;
     unsigned short int cupoMax;
     unsigned short int inscritos;
