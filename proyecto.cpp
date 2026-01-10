@@ -1283,7 +1283,7 @@ void adminMenu() {
         cout << "[4] Gestion de Grupos" << endl;
         cout << "[5] Inscripciones" << endl;
         cout << "[6] Reportes Generales" << endl;
-        cout << "[8] Mantenimiento" << endl;
+        cout << "[7] Mantenimiento" << endl;
         cout << "[8] Salir" << endl;
 
         cout << "Introduce el numero de la opcion: " << endl;
