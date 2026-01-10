@@ -233,6 +233,7 @@ void agregarMateria() {
 }
 
 void gestionMaterias() {
+    while(1) {
     limpiar();
     cout << "====================================" << endl;
     cout << "        GESTOR DE MATERIAS          " << endl;
@@ -249,6 +250,23 @@ void gestionMaterias() {
     while(act->sig != NULL) {
         cout << "\t" << act->codigo << ": " << act->nombre << endl;
         act = act->sig;
+    }
+    cout << "Opciones: [1] Agregar materia; [2] Borrar materia; [3] Salir" << endl;
+    cout << "> ";
+    int opcion = getint();
+    switch (opcion) {
+        case 1:
+            agregarMateria();
+            break;
+        case 2:
+            /* TODO: borrar materias */
+            break;
+        case 3:
+            return;
+        default:
+            cout << "Opcion invalida!" << endl;
+    }
+    dormir(800);
     }
 }
 
