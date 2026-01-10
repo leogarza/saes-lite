@@ -28,68 +28,68 @@ using namespace std;
 static bool adminMode = false;
 
 struct Materia {
+    struct Materia* sig;
+
     unsigned int uid;
-    char nombre[24];
+    char nombre[64];
     char codigo[6];
     unsigned short int periodo;
     float creditos;
-    struct Materia* sig;
 };
 
 struct BloqueHorario {
-    enum { LUN, MAR, MIE, JUE, VIE, SAB } dia;
-    unsigned short int hora;
-    unsigned short int minuto;
-    char edificio;
-    unsigned short int salon;
-    char duracionMin;
     struct BloqueHorario* sig;
-};
 
-struct HorarioMateria {
-    unsigned int materiaUid;
-    struct BloqueHorario* bloques; /* lista */
+    enum { LUN, MAR, MIE, JUE, VIE, SAB } dia;
+    unsigned char hora; /* hora de inicio */
+    unsigned char minuto; /* minuto de inicio */
+    unsigned char edificio; /* numero de edificio */
+    unsigned short int salon; /* numero de salon */
+    unsigned char duracionMin; /* duracion de la clase en min */
 };
 
 struct Profesor {
+    struct Profesor* sig;
+
     unsigned int uid;
     char nombre[64];
-    struct Profesor* sig;
 };
 
 enum CALIFICACION {
-    PRIMERPAR = 0,
-    SEGUNDOPAR,
-    TERCERPAR,
-    FINAL,
+    PRIMERPAR = 0, /* primer parcial */
+    SEGUNDOPAR, /* segundo parcial */
+    TERCERPAR, /* tercer parcial */
+    FINAL, /* calificación final */
+    EXTRA, /* extraordinario */
     CALFIFACIONTAM
 };
 
 struct Inscripcion {
+    struct Inscripcion* sig;
+
     unsigned int idGrupo;
     float calificaciones[CALFIFACIONTAM];
-    struct Inscripcion* sig;
 };
 
 struct Alumno {
+    struct Alumno* sig;
+
     char nombre[64];
     unsigned int boleta;
     unsigned short int periodo;
     Inscripcion* materiasInscritas;
-
-    struct Alumno* sig;
 };
 
 struct Grupo {
+    struct Grupo* sig;
+
     unsigned int uid;
     unsigned int uidMateria;
     unsigned int uidProfesor;
-    char clave[5]; /* ej 2CV1 */
+    char clave[6]; /* ej 2CV1 */
     struct BloqueHorario* horario;
     unsigned short int cupoMax;
     unsigned short int inscritos;
-
-    struct Grupo* sig;
 };
 
 struct {
